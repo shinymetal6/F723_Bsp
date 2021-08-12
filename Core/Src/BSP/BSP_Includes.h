@@ -18,7 +18,4 @@
 #define LCD_UsrLogY(...)	LCD_LineColor = LCD_COLOR_YELLOW;\
 							printf(__VA_ARGS__);
 
-extern	void USB_CallFromFS(void);
-extern	void USB_CallFromHS(void);
-
 #endif /* SRC_BSP_BSP_INCLUDES_H_ */

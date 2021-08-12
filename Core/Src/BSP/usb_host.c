@@ -164,6 +164,8 @@ static void USBH_UserProcess2  (USBH_HandleTypeDef *phost, uint8_t id)
 
   case HOST_USER_CLASS_ACTIVE:
   Appli_state = APPLICATION_READY;
+  USB_CallFromFS(phost,id);
+
   break;
 
   case HOST_USER_CONNECTION:
