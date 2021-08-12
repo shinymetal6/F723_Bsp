@@ -59,6 +59,9 @@ ApplicationTypeDef Appli_state = APPLICATION_IDLE;
 static void USBH_UserProcess1(USBH_HandleTypeDef *phost, uint8_t id);
 static void USBH_UserProcess2(USBH_HandleTypeDef *phost, uint8_t id);
 
+extern	void USB_CallFromHS(USBH_HandleTypeDef *phost, uint8_t id);
+extern	void USB_CallFromFS(USBH_HandleTypeDef *phost, uint8_t id);
+
 /*
  * -- Insert your external function declaration here --
  */
