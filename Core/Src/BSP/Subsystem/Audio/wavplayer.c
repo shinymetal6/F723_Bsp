@@ -4,7 +4,6 @@
 
 #ifdef WAVPLAYER
 
-
 static AUDIO_OUT_BufferTypeDef  BufferCtl;
 static uint32_t uwVolume = 70;
 WAVE_FormatTypeDef WaveFormat;
@@ -12,13 +11,13 @@ FIL WavFile;
 __attribute__ ((aligned (16)))  uint16_t file_buf[AUDIO_OUT_BUFFER_SIZE];
 
 
-static AUDIO_ErrorTypeDef GetFileInfo(WAVE_FormatTypeDef *info)
+static AUDIO_ErrorTypeDef GetFileInfo(uint8_t * filename, WAVE_FormatTypeDef *info)
 {
 uint32_t bytesread;
 uint32_t duration;
 uint8_t str[FILEMGR_FILE_NAME_SIZE + 20];
 
-	if(f_open(&WavFile, "sample.wav", FA_OPEN_EXISTING | FA_READ) == FR_OK)
+	if(f_open(&WavFile, (char *)filename, FA_OPEN_EXISTING | FA_READ) == FR_OK)
 	{
 		/* Fill the buffer to Send */
 		if(f_read(&WavFile, info, sizeof(WaveFormat), (void *)&bytesread) == FR_OK)
@@ -58,11 +57,11 @@ uint8_t PlayerInit(uint32_t AudioFreq)
 	return 0;
 }
 
-AUDIO_ErrorTypeDef AUDIO_PLAYER_Start(uint8_t idx)
+AUDIO_ErrorTypeDef AUDIO_PLAYER_Start(uint8_t * filename)
 {
 uint32_t bytesread;
 
-	GetFileInfo(&WaveFormat);
+	GetFileInfo(filename,&WaveFormat);
 	PlayerInit(WaveFormat.SampleRate);
 
 	f_lseek(&WavFile, 0);
@@ -85,6 +84,9 @@ AUDIO_ErrorTypeDef AUDIO_PLAYER_Process(void)
 {
 AUDIO_ErrorTypeDef audio_error = AUDIO_ERROR_NONE;
 uint32_t bytesread;
+
+	HAL_GPIO_WritePin(ARD_D8_GPIO_GPIO_Port, ARD_D8_GPIO_Pin, GPIO_PIN_SET);
+
 	if(BufferCtl.fptr >= WaveFormat.FileSize)
 	{
 		BSP_AUDIO_OUT_Stop(CODEC_PDWN_SW);
@@ -111,6 +113,7 @@ uint32_t bytesread;
 		BufferCtl.flag &= ~WAVPLAY_STATE_FLAG_FULL;
 		BufferCtl.fptr += bytesread;
 	}
+	HAL_GPIO_WritePin(ARD_D8_GPIO_GPIO_Port, ARD_D8_GPIO_Pin, GPIO_PIN_RESET);
 	return audio_error;
 }
 
@@ -125,12 +128,14 @@ void BSP_AUDIO_OUT_TransferComplete_CallBack(void)
 {
 	/* allows AUDIO_Process() to refill 2nd part of the buffer  */
 	BufferCtl.flag |= WAVPLAY_STATE_FLAG_FULL;
+	AUDIO_PLAYER_Process();
 }
 
 void BSP_AUDIO_OUT_HalfTransfer_CallBack(void)
 {
 	/* allows AUDIO_Process() to refill 1st part of the buffer  */
 	BufferCtl.flag |= WAVPLAY_STATE_FLAG_HALF;
+	AUDIO_PLAYER_Process();
 }
 
 void BSP_AUDIO_OUT_ClockConfig(SAI_HandleTypeDef *hsai, uint32_t AudioFreq, void *Params)

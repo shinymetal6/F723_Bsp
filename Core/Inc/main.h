@@ -33,12 +33,12 @@ extern "C" {
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "BSP_Includes.h"
-
 /* USER CODE END Includes */
 
 /* Exported types ------------------------------------------------------------*/
 /* USER CODE BEGIN ET */
 #define	WAVPLAYER	1
+//#define	SINEPLAYER	1
 /* USER CODE END ET */
 
 /* Exported constants --------------------------------------------------------*/

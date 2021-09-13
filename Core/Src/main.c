@@ -63,6 +63,7 @@ SPI_HandleTypeDef hspi2;
 TIM_HandleTypeDef htim2;
 TIM_HandleTypeDef htim3;
 TIM_HandleTypeDef htim5;
+TIM_HandleTypeDef htim6;
 TIM_HandleTypeDef htim9;
 TIM_HandleTypeDef htim12;
 
@@ -104,6 +105,7 @@ static void MX_UART5_Init(void);
 static void MX_UART7_Init(void);
 static void MX_USART2_UART_Init(void);
 static void MX_USART6_UART_Init(void);
+static void MX_TIM6_Init(void);
 void MX_USB_HOST_Process(void);
 
 /* USER CODE BEGIN PFP */
@@ -113,6 +115,8 @@ void MX_USB_HOST_Process(void);
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 uint32_t	usbdisk_ready=0,audio_init_flag=0,samplerate;
+uint8_t	tim1sec_flag;
+
 /* USER CODE END 0 */
 
 /**
@@ -122,7 +126,7 @@ uint32_t	usbdisk_ready=0,audio_init_flag=0,samplerate;
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-
+uint8_t	msgstate = 0;
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -167,27 +171,28 @@ int main(void)
   MX_USART6_UART_Init();
   MX_USB_HOST_Init();
   MX_FATFS_Init();
+  MX_TIM6_Init();
   /* USER CODE BEGIN 2 */
   HAL_GPIO_WritePin(USB_OTGHS_PPWR_EN_GPIO_Port, USB_OTGHS_PPWR_EN_Pin, GPIO_PIN_SET);
   //HAL_GPIO_WritePin(USB_OTGFS_PPWR_EN_GPIO_Port, USB_OTGFS_PPWR_EN_Pin, GPIO_PIN_RESET);
   InitLCD();
+  HAL_TIM_Base_Start_IT(&htim6);
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
     {
-#define MIDI
-#ifndef MIDI
   		if ( usbdisk_ready == 1 )
   		{
   			if ( audio_init_flag == 0 )
   			{
   #ifdef WAVPLAYER
-  				PlayerInit();
+  				//PlayerInit();
   				//AUDIO_PLAYER_Init();
-  				AUDIO_PLAYER_Start(0);
-  #else
+  				AUDIO_PLAYER_Start("sample1.wav");
+  #endif
+  #ifdef SINEPLAYER
   				InitSinePlay();
   #endif
   				audio_init_flag = 1;
@@ -196,15 +201,26 @@ int main(void)
   #ifdef WAVPLAYER
   		if ( audio_init_flag == 1 )
   		{
-  			AUDIO_PLAYER_Process();
+  			//AUDIO_PLAYER_Process();
   		}
-  #else
+  #endif
+  #ifdef SINEPLAYER
   		if ( audio_init_flag == 1 )
   		{
   			SinePlay_Process();
   		}
   #endif
-#endif
+  		if ( tim1sec_flag == 1 )
+  		{
+  			tim1sec_flag = 0 ;
+  			if ( msgstate == 0 )
+  				BSP_LCD_DisplayStringAt(0, 35, (uint8_t *)"Irq 1sec write test from bkg", CENTER_MODE);
+  			else
+  				BSP_LCD_DisplayStringAt(0, 35, (uint8_t *)"                            ", CENTER_MODE);
+  			msgstate++;
+  			msgstate &= 0x01;
+
+  		}
     /* USER CODE END WHILE */
     MX_USB_HOST_Process();
 
@@ -889,6 +905,44 @@ static void MX_TIM5_Init(void)
 
   /* USER CODE END TIM5_Init 2 */
   HAL_TIM_MspPostInit(&htim5);
+
+}
+
+/**
+  * @brief TIM6 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_TIM6_Init(void)
+{
+
+  /* USER CODE BEGIN TIM6_Init 0 */
+
+  /* USER CODE END TIM6_Init 0 */
+
+  TIM_MasterConfigTypeDef sMasterConfig = {0};
+
+  /* USER CODE BEGIN TIM6_Init 1 */
+
+  /* USER CODE END TIM6_Init 1 */
+  htim6.Instance = TIM6;
+  htim6.Init.Prescaler = 10800;
+  htim6.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim6.Init.Period = 10000;
+  htim6.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+  if (HAL_TIM_Base_Init(&htim6) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
+  sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
+  if (HAL_TIMEx_MasterConfigSynchronization(&htim6, &sMasterConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN TIM6_Init 2 */
+
+  /* USER CODE END TIM6_Init 2 */
 
 }
 

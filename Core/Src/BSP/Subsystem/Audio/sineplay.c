@@ -10,7 +10,7 @@
 #include "sineplay.h"
 #include <stdio.h>
 
-#ifndef WAVPLAYER
+#ifdef SINEPLAYER
 __attribute__ ((aligned (16)))  uint16_t sine_buf[AUDIO_OUT_BUFFER_SIZE_INT16];
 
 AUDIO_BufferTypeDef  	 SinePlay;
